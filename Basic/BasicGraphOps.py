@@ -15,12 +15,23 @@ The execution phase generally runs a loop that evaluates a training step repeate
 
 #### 1 - Construct Computation Graph ###############
 
+# ------- Source Ops ------
+'''
+Constants and variables take no input (they are called source ops)
+'''
+
 ## Note: no computation is performed here
 # Declare variables, and give them a value
-# Note: the variables have not been initialized
+# The variables have not been initialized
 x = tf.Variable(3, name="x")
 y = tf.Variable(4, name="y")
 
+
+# --------- Ops ---------
+'''
+Operations (also called ops for short) can take 
+any number of inputs and produce any number of outputs
+'''
 # Define the function as f(x,y)
 f=x*x*y+y+2
 
@@ -72,7 +83,7 @@ print(result2)
 it does not actually perform the initialization immediately, 
 it creates a node in the graph that will initialize all variables when it is run
 '''
-init = tf.global_variable_initializers() # prepare an init node
+init = tf.global_variables_initializer() # prepare an init node
 
 with tf.Session() as sess:
     init.run() # actually initialize ALL the variables
@@ -83,7 +94,7 @@ print(result3)
 
 
 ######### Interactive Session ##########
-init = tf.global_variable_initializers() # prepare an init node
+init = tf.global_variables_initializer() # prepare an init node
 '''
 The only difference with a regular Session is that when it is 
 created it automatically sets itself as the default session,

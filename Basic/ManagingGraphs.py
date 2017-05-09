@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-# Any node you create is automatically added to the DEFAULT graph
+# Any node you create is automatically ADDED to the DEFAULT graph
 x1 = tf.Variable(1)
 
 print('x1.graph is default: {0} '.format(x1.graph is tf.get_default_graph()))
