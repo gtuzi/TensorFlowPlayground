@@ -7,23 +7,31 @@ from sklearn.preprocessing import StandardScaler
 def run_training_op(training_op, cost_op, n_epochs):
     '''
         Run a training op over a number of epochs
-    :param training_op: 
-    :param n_epochs: 
+        Assumption: 'theta' variable is expected to be
+        in the default graph. (Variables remain "alive"
+        for the duration of the session. Ops/graph nodes
+        drop their values between graph runs).
+    :param training_op: the op to run
+    :param n_epochs: number of epochs
     :return: 
+    Best paramter 
     '''
     init = tf.global_variables_initializer()
-
+    saver = tf.train.Saver()
     with tf.Session() as sess:
         sess.run(init)
         for epoch in range(n_epochs):
-            if epoch % 100 == 0:
-                print("Epoch", epoch, "Cost =", cost_op.eval())
             sess.run(training_op)
+            if epoch % 100 == 0:
+                print('Epoch: {0}, Cost{1:.2E}'.format(epoch, cost_op.eval()))
+                save_path = saver.save(sess, "/tmp/my_model.ckpt")
 
-
+        # Theta is a variable of the default graph.
+        # So a call to it's eval will return the
+        # value it has at that point
         best_theta = theta.eval()
+        save_path = saver.save(sess, "/tmp/my_model.ckpt")
     return best_theta
-
 
 ################ Data Load #################
 housing = fetch_california_housing()
@@ -71,7 +79,6 @@ reduce_mean()
     Computes the mean of elements across dimensions of a tensor.
 '''
 mse = tf.reduce_mean(tf.square(error), name="mse")
-
 # Formula : Batch gradient of the MSE. Scaled by 2/m
 gradients = 2/m * tf.matmul(tf.transpose(X), error)
 
@@ -80,6 +87,11 @@ assign() function creates a node that will assign a new value to a variable.
 In this case, it assigns the value of (theta - learning_rate * gradients) to
 theta... it implements the Batch Gradient Descent step
 
+GT: It's the mathematical "equal" operation. Or,
+  theta_j<i+1> <--- theta_j<i> - mu * gradient<theta_j>
+  This is used as an operation because we can't use:
+  session.run(theta = theta - learning_rate * gradients)
+ 
 Single value
 theta_j<i+1> = theta_j<i> - mu * gradient<theta_j>
 
@@ -95,6 +107,7 @@ print(best_theta)
 
 ################ Use TF gradient() #####################
 # Replace the exact form of gradient, with tf.gradients()
+
 tf.reset_default_graph()
 
 X = tf.constant(scaled_housing_data_plus_bias, dtype=tf.float32, name="X")
@@ -107,7 +120,8 @@ theta = tf.Variable(randvals, name="theta")
 y_pred = tf.matmul(X, theta, name="predictions")
 
 error = y_pred - y # error_i = y_hat_i - y_i
-mse = tf.reduce_mean(tf.square(error), name="mse") # (1/m)*sum(error_i^2)
+# (1/m)*sum(error_i^2)
+mse = tf.reduce_mean(tf.square(error), name="mse")
 
 '''
 The gradients() function takes an op (in this case mse) 
@@ -123,7 +137,7 @@ the MSE with regards to theta.
 # Returns: A list of `dth/dx` for each x in `xs`
 gradients = tf.gradients(ys = mse, xs = [theta])[0]
 
-# The optimization:  theta(i+i) = theta(i) - nu * D_MSE
+# The optimization:  theta(i+i) <--- theta(i) - nu * D_MSE
 training_op = tf.assign(theta, theta - learning_rate * gradients)
 
 # Run
@@ -150,6 +164,7 @@ mse = tf.reduce_mean(tf.square(error), name="mse") # (1/m)*sum(error_i^2)
 
 # The optimization:  theta(i+i) = theta(i) - nu * D(MSE)/d_theta
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+# Find the minima (hopefully the global)
 training_op = optimizer.minimize(mse)
 
 # Run
