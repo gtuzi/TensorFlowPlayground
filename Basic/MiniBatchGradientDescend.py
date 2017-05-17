@@ -174,8 +174,8 @@ def run_training_op(training_op, cost_op, n_epochs, batch_size, num_batches, ini
                     Xbatch, ybatch = fetch_batch(batch_index=batch, batch_size=batch_size)
                     # Run Gradients and then add
                     _, gradnorm, bcost = sess.run([training_op, gradient_norm_op, cost_op], feed_dict={X: Xbatch, y: ybatch})
-                    epoch_cost += bcost
-                    epoch_grad += gradnorm
+                    epoch_cost += (1./num_batches)*bcost
+                    epoch_grad += (1./num_batches)*gradnorm
 
                     # print('Cost: {0}'.format(b))
                 if epoch % 50 == 0:
@@ -223,7 +223,7 @@ mse=tf.reduce_mean(tf.square(error), name="mse")
 # Note: divides by batch size (not m: the size of the whole dataset)
 # Formula : Batch gradient of the MSE.
 #           MSEgradient_theta: (2/batch_size)* (X)' * (error)
-gradients = (2/batch_size * tf.matmul(tf.transpose(X), error))
+# gradients = (2/batch_size * tf.matmul(tf.transpose(X), error))
 
 # ---- Using TF gradients()
 # D_MSE / d_theta
