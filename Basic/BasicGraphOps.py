@@ -20,27 +20,50 @@ The execution phase generally runs a loop that evaluates a training step repeate
 Constants and variables take no input (they are called source ops)
 '''
 
-## Note: no computation is performed here
-# Declare variables, and give them a value
-# The variables have not been initialized
+'''
+Before any of the following code is run, TF generates an
+"invisible" default graph.
+'''
+
+'''
+ Variables are automatically added to the "invisible" graph created
+ Note: no computation is performed here
+ Declare variables, and give them a value The variables have not been initialized
+'''
 x = tf.Variable(3, name="x")
 y = tf.Variable(4, name="y")
-
+z = tf.placeholder(dtype=tf.int32, name="z")
 
 # --------- Ops ---------
 '''
 Operations (also called ops for short) can take 
-any number of inputs and produce any number of outputs
+any number of inputs and produce any number of outputs.
+Below, we're using the multiplication and addition ops
 '''
 # Define the function as f(x,y)
-f=x*x*y+y+2
+f= x * x * y + y + 2
+# This is equivalent to the following daisy chaining of ops:
+# f = tf.add(tf.add(tf.mul(tf.mul(x, x), y), y), tf.constant(2))
+
+# Function which depends on placeholder
+fz = x + z
+
+
+# Function which depends on placeholder and previous op
+fcomplex = fz + f
+
+'''
+Ops and source ops are added as 'nodes' in a graph. 
+Their inputs/outputs are tensors (more general case of vectors).
+So what what gets passed around from one node 
+to another are tensors - composed of values
+'''
 
 ######### 2 - Runing the Graph ###########
 '''
-To evaluate this graph you need to open a TensorFlow session 
-and use it to initialize the variables and evaluate f. 
-A TensorFlow session takes care of placing the operations 
-onto devices such as CPUs and GPUs and running them, 
+To evaluate this "inivsible" default graph you need to open a TensorFlow session 
+and use it to initialize the variables and evaluate f.  A TensorFlow session 
+takes care of placing the operations onto devices such as CPUs and GPUs and running them, 
 and it holds all the variable values
 '''
 
@@ -51,6 +74,29 @@ try:
     sess.run(y.initializer)
     result = sess.run(f)
     print(result)
+
+    # Equivalent evaluative calls
+    print('x.eval(session=sess): {0}'.format(x.eval(session=sess)))
+    print('sess.run(x): {0}'.format(sess.run(x)))
+
+    # Run operation that depends on place-holder
+    result = sess.run(fz, feed_dict={z:5})
+    print('fz: {0}'.format(result))
+
+    # ---- Complex Operation ----
+    # Run operation that depends on place-holder and other op
+    result = sess.run(fcomplex, feed_dict={z:5})
+    print('fcomplex: {0}'.format(result))
+
+    # We can feed whatever we want into the feed_dictionary, and sort of
+    # override the default value of the constitutive ops. So, for fcomplex
+    # instead of evaluating 'f', feed a value in its place as in following:
+    result = sess.run(fcomplex, feed_dict={z: 5, f:1})
+    print('fcomplex: {0}'.format(result))
+
+    # ----- Assign any value to a variable ------
+    sess.run(tf.assign(x, 45))
+    print('after assignment: sess.run(x): {0}'.format(sess.run(x)))
 except Exception as ex:
     print(str(ex))
 finally:
