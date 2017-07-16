@@ -16,7 +16,7 @@ mnist = input_data.read_data_sets("/tmp/data/")
 
 ##################  Parameters ##############
 n_inputs = 28 * 28 # for MNIST
-n_hidden1 = 2*300
+n_hidden1 = 300
 n_hidden2 = 150 # codings
 n_hidden3 = n_hidden1
 n_output = n_inputs
