@@ -20,9 +20,13 @@ constLit = tf.constant(4.5, shape=()) # Still a tf.op.Tensor
 constA = tf.constant([3.5, 5.6], shape=(2,))
 # Rank = 2: [[3.5, 5.6]]
 constB = tf.constant([3.5, 5.6], shape=(1,2))
-# Rank = 3: [[3.5,
+# Rank = 2: [[3.5,
 #             5.6]]
 constC = tf.constant([3.5, 5.6], shape=(2,1))
+
+constMa = tf.constant([[1, 2], [9, 4]], shape=(2,2), dtype=tf.float32)
+constMb = tf.constant([[5, 6], [7, 8]], shape=(2,2), dtype=tf.float32)
+
 
 x = tf.Variable(xpy, dtype=tf.float32, name="x")
 y = tf.Variable(ypy, dtype=tf.float32, name="y")
@@ -52,6 +56,32 @@ favg_tf = tf.reduce_mean(M2, axis=0)
 xyAddN = tf.add_n([x, y])
 
 
+# Losses
+dM = constMa - constMb
+mse_loss = tf.contrib.losses.mean_squared_error(constMa, constMb)
+
+
+####### Inverse Convolution ###############
+batch_size = 5
+input_channels = 128
+output_channels = 96
+output_shape = [batch_size, 100, 100, output_channels]
+input_shape = [batch_size, 50, 50, input_channels]
+
+strides = [1, 2, 2, 1]
+
+inputSignal = tf.constant(0.1, shape=input_shape)
+outputSignal = tf.constant(0.5, shape=output_shape)
+
+W = tf.constant(0.1, shape=[4, 4, output_channels, input_channels])
+
+forwardConv = tf.nn.conv2d(outputSignal, W, strides=strides, padding='SAME')
+
+invConvOut = tf.nn.conv2d_transpose(inputSignal, W,
+                                 output_shape=output_shape,
+                                 strides=strides,
+                                 padding='SAME')
+
 init = tf.global_variables_initializer() # prepare an init node
 with tf.Session() as sess:
     init.run() # actually initialize ALL the variables (variable.initializer.run())
@@ -71,6 +101,22 @@ with tf.Session() as sess:
     print('Favg_man: {0}'.format(favg_man.eval()))
     print('Favg_tf: {0}'.format(favg_tf.eval()))
     print('XYAddN: {0}'.format(xyAddN.eval()))
+
+    print('\n------- Losses ------- ')
+    print('Delta Matrix {0}'.format(dM.eval()))
+    print('MSE: {0}'.format(mse_loss.eval()))
+
+    inputSignalVal = inputSignal.eval()
+    outputSignalVal = outputSignal.eval()
+
+    print('\n------- Forward Convolution ------- ')
+    forwardConvVal = forwardConv.eval()
+    print('Forward Conv Shape: {0}'.format(forwardConvVal.shape))
+    print('\n------- Inverse Convolution ------- ')
+    invConvOutVal = invConvOut.eval()
+    print('Inv Conv Shape: {}'.format(invConvOutVal.shape))
+    pass
+
 
 
 
